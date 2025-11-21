@@ -1,0 +1,4 @@
+app:
+  port: 8888
+  db_url: mysql://root:lotto1988@192.168.2.118:3306/chat?charset=utf8mb4
+  file_base_url: http://localhost:8080/files/
