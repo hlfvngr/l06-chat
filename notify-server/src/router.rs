@@ -1,15 +1,46 @@
-use std::path::PathBuf;
+use axum::{
+    Router,
+    http::{Method, StatusCode},
+    middleware::from_fn_with_state,
+    response::{Html, IntoResponse},
+    routing::{any, get},
+};
+use chat_core::middlewares::auth::verify_token;
+use tower_http::cors::{self, CorsLayer};
 
-use axum::{Router, routing::any};
-use tower_http::services::ServeDir;
+use crate::{AppState, handler::sse};
 
-use crate::handler::sse;
-
-pub fn get_router() -> Router {
-    let assets_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("assets");
-    let static_files_service = ServeDir::new(assets_dir).append_index_html_on_directories(true);
+pub fn get_router(state: AppState) -> Router {
+    let cors = CorsLayer::new()
+        .allow_methods([
+            Method::GET,
+            Method::POST,
+            Method::PATCH,
+            Method::DELETE,
+            Method::PUT,
+        ])
+        .allow_origin(cors::Any)
+        .allow_headers(cors::Any);
     // build our application with a route
     Router::new()
-        .fallback_service(static_files_service)
-        .route("/sse", any(sse::sse_handler))
+        .route("/events", any(sse::sse_handler))
+        .layer(from_fn_with_state(state.clone(), verify_token::<AppState>))
+        .layer(cors)
+        .route("/favicon.ico", get(favicon))
+        .route("/", get(index_handler))
+        .with_state(state)
+}
+
+async fn index_handler() -> Html<&'static str> {
+    Html(include_str!("../index.html"))
+}
+
+// 处理 favicon 请求（返回空 ico 或真实图标）
+async fn favicon() -> impl IntoResponse {
+    (
+        StatusCode::OK,
+        [("Content-Type", "image/x-icon")],
+        // 可以返回真实图标 bytes，这里用最小合法 ICO（227 字节）
+        include_bytes!("../assets/favicon.ico").as_slice(),
+    )
 }

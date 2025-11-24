@@ -5,16 +5,28 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct AppConfig {
-    pub app: Config,
+    pub app: ServerConfig,
+    pub auth: AuthConfig,
+    pub redis: RedisConfig,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct Config {
+pub struct ServerConfig {
     pub port: u16,
 }
 
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct AuthConfig {
+    pub public_key: String,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct RedisConfig {
+    pub url: String,
+}
+
 impl Deref for AppConfig {
-    type Target = Config;
+    type Target = ServerConfig;
 
     fn deref(&self) -> &Self::Target {
         &self.app

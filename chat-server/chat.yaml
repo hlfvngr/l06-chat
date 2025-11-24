@@ -1,4 +1,19 @@
-app:
+server:
   port: 8888
-  db_url: mysql://root:lotto1988@192.168.2.118:3306/chat?charset=utf8mb4
+  #db_url: mysql://root:lotto1988@192.168.2.118:3306/chat?charset=utf8mb4
+  db_url: mysql://root:123456@localhost:3306/chat?charset=utf8mb4
   file_base_url: http://localhost:8080/files/
+
+auth:
+  secret_key: |
+    -----BEGIN PRIVATE KEY-----
+    MC4CAQAwBQYDK2VwBCIEILFN71YEFcGX4RsQ1Axj+lqLqK6A0h1PG0EgUK+KrMJE
+    -----END PRIVATE KEY-----
+  public_key: |
+    -----BEGIN PUBLIC KEY-----
+    MCowBQYDK2VwAyEATYOs+JvHTIuhg0a724WOCjvdXe1O2gRhXVYNFB+Zdxg=
+    -----END PUBLIC KEY-----
+
+redis:
+  url: redis://localhost:6379
+  password: <PASSWORD>

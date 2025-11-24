@@ -1,2 +1,12 @@
 app:
   port: 8889
+
+auth:
+  public_key: |
+    -----BEGIN PUBLIC KEY-----
+    MCowBQYDK2VwAyEATYOs+JvHTIuhg0a724WOCjvdXe1O2gRhXVYNFB+Zdxg=
+    -----END PUBLIC KEY-----
+
+redis:
+  url: redis://localhost:6379
+  password: <PASSWORD>

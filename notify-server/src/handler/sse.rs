@@ -1,22 +1,45 @@
 use std::{convert::Infallible, time::Duration};
 
-use axum::response::{Sse, sse::Event};
-use axum_extra::{TypedHeader, headers};
-use futures::{Stream, stream};
-use tokio_stream::StreamExt as _;
+use axum::{
+    Extension,
+    extract::State,
+    response::{Sse, sse::Event},
+};
+use chat_core::{event::ChatEvent, models::user::CurUser};
+use futures::Stream;
+use tokio_stream::{StreamExt as _, wrappers::BroadcastStream};
+use tracing::{debug, info};
+
+use crate::AppState;
 
 pub(crate) async fn sse_handler(
-    TypedHeader(user_agent): TypedHeader<headers::UserAgent>,
+    Extension(user): Extension<CurUser>,
+    State(state): State<AppState>,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
-    println!("`{}` connected", user_agent.as_str());
+    let users = state.users.clone();
 
-    // A `Stream` that repeats an event every second
-    //
-    // You can also create streams from tokio channels using the wrappers in
-    // https://docs.rs/tokio-stream
-    let stream = stream::repeat_with(|| Event::default().data("hi!"))
-        .map(Ok)
-        .throttle(Duration::from_secs(1));
+    let rx = if let Some(tx) = users.get(&user.id) {
+        tx.subscribe()
+    } else {
+        let (tx, rx) = tokio::sync::broadcast::channel(256);
+        users.insert(user.id, tx);
+        rx
+    };
+
+    info!("User {} subscribed", user.id);
+
+    let stream = BroadcastStream::new(rx).filter_map(|v| v.ok()).map(|v| {
+        let name = match v.as_ref() {
+            ChatEvent::ChatCreate(_) => "ChatCreate",
+            ChatEvent::ChatDrop(_) => "ChatDrop",
+            ChatEvent::UserJoin(_) => "UserJoin",
+            ChatEvent::UserLeave(_) => "UserLeave",
+            ChatEvent::MessageSend(_) => "MessageSend",
+        };
+        let v = serde_json::to_string(&v).expect("Failed to serialize event");
+        debug!("Sending event {}: {:?}", name, v);
+        Ok(Event::default().data(v).event(name))
+    });
 
     Sse::new(stream).keep_alive(
         axum::response::sse::KeepAlive::new()

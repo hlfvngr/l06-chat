@@ -5,6 +5,7 @@ edition = "2024"
 license = "MIT"
 
 [dependencies]
+chat-core = { path = "../chat-core" }
 axum-extra = { version = "0.12.2", features = ["typed-header"] }
 anyhow = { workspace = true }
 axum = { workspace = true }
@@ -20,4 +21,7 @@ tracing-subscriber = { workspace = true }
 futures = "0.3.31"
 futures-util = "0.3.31"
 tower = "0.5.2"
-tower-http = { version = "0.6.2", features = ["fs"] }
+tower-http = { version = "0.6.2", features = ["fs", "cors"] }
+redis = { version = "0.32.7", features = ["tokio-rustls-comp", "json"] }
+dashmap = "6.1.0"
+jwt-simple = { version = "0.12.13" }
