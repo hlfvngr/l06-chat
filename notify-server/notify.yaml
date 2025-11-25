@@ -8,5 +8,5 @@ auth:
     -----END PUBLIC KEY-----
 
 redis:
-  url: redis://localhost:6379
-  password: <PASSWORD>
+  #url: redis://localhost:6379
+  url: redis://:wd123456@192.168.2.118:6379
